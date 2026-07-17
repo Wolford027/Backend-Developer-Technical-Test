@@ -218,7 +218,7 @@ this size, and a stale row is harmless as long as it's never served.
 
 ## 7. URL validation
 
-Pydantic `HttpUrl` gets us syntax. It is **not** sufficient on its own:
+These are syntactically valid URLs and unsafe redirect destinations:
 
 ```
 javascript:alert(document.cookie)   # ← a valid URL. Not a valid destination.
@@ -232,6 +232,28 @@ the attacker's script.
 
 **Rules:** scheme must be `http` or `https` (allowlist, not a blocklist of known-bad —
 blocklists are always incomplete); max length 2048.
+
+> **Correction — found during implementation.**
+>
+> This section originally claimed Pydantic's `HttpUrl` "gets us syntax" but "is **not**
+> sufficient on its own", and that a hand-written scheme allowlist was needed beside it.
+> **That was wrong.** `HttpUrl` enforces the http/https allowlist itself — it rejects
+> `javascript:`, `data:`, `file:` and `ftp:` unaided.
+>
+> The explicit `if scheme not in ("http", "https")` guard I wrote was therefore
+> **unreachable**. Mutation testing caught it: deleting the guard broke no test, because
+> no input ever reached it. It's been removed. Dead code that appears to enforce a
+> security property is worse than no code at all — it draws the eye away from the line
+> actually doing the work (`TypeAdapter(HttpUrl)`), and invites the next reader to
+> "simplify" the real check while leaving the decorative one.
+>
+> The property still holds. It rests on `HttpUrl`, not on my guard. The **test** is what
+> keeps it honest: swap `HttpUrl` for `AnyUrl` or a plain `str` and the allowlist vanishes
+> silently — `test_rejects_non_http_schemes` is the only thing that would notice.
+>
+> Worth recording as a process point, not just a bug: the design was confidently specific
+> and confidently wrong, and writing the test *first* wouldn't have caught it either — the
+> test passed either way. Only deliberately breaking the code exposed it.
 
 **Explicitly out of scope:** SSRF protection (blocking `localhost` / RFC1918 targets). We
 only *redirect* the browser, never fetch the URL server-side, so there's no server-side
