@@ -5,14 +5,24 @@ FastAPI's dependency_overrides. Tests must never touch the dev database -- a
 suite that wipes real data gets run once and then never trusted again.
 """
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import os
+import tempfile
 
-import crud
-import main
-from database import Base, get_db
+# MUST happen before importing main/database: config reads DATABASE_URL at
+# import time, and main.py calls create_all() at import time against whatever
+# engine that produced. Without this, merely importing the app to test it
+# creates a stray shortener.db in the working directory -- which is exactly
+# how one got committed to this repo once already.
+os.environ["DATABASE_URL"] = f"sqlite:///{tempfile.mkdtemp()}/import-time.db"
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+
+import crud  # noqa: E402
+import main  # noqa: E402
+from database import Base, get_db  # noqa: E402
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
-backend/venv/
-backend/*.db
+venv/
+*.db
 __pycache__/
 .pytest_cache/
 frontend/node_modules/
