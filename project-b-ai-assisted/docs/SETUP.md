@@ -64,14 +64,17 @@ npm run dev
 
 Open <http://localhost:3000>, paste the key from step 2, and shorten something.
 
-The frontend reads the API location from `frontend/.env.local`:
+**No frontend config needed for local development.** The API location defaults to
+`http://localhost:8000` in code, so the two halves find each other out of the box.
 
-```
-NEXT_PUBLIC_API_URL=http://localhost:8000
+If you move the backend somewhere else, point the frontend at it by copying the example
+env file and editing it:
+
+```bash
+cp .env.example .env.local     # then edit NEXT_PUBLIC_API_URL
 ```
 
-That file is already there with the right default; you only need to touch it if you move
-the backend off `:8000`.
+`.env.local` is git-ignored, which is why a fresh clone doesn't have one.
 
 ---
 
